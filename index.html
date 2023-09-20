@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./script.js"></script>
+</head>
+<body>
+
+  <div id="container">
+    <h1>QR SCANNER</h1>
+
+      <div id="videoContainer">
+        <video id="video" autoplay></video>
+          <div id="qrResult"></div>
+      </div>
+  </div>
+
+  <script>
+    async function startCamera() {
+      const videoElement = document.getElementById('video');
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoElement.srcObject = stream;
+
+        return new Promise((resolve) => {
+          videoElement.onloadedmetadata = () => {
+            resolve(videoElement);
+          };
+        });
+      } catch (error) {
+        console.error('Error accessing the camera:', error);
+      }
+    }
+
+    async function scanQRCode() {
+      const video = await startCamera();
+
+      const qrResult = document.getElementById('qrResult');
+
+      const qrScannerInterval = setInterval(() => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        const container = document.getElementById('videoContainer');
+        const containerWidth = container.offsetWidth;
+        const containerHeight = container.offsetHeight;
+
+        canvas.width = containerWidth;
+        canvas.height = containerHeight;
+
+        context.drawImage(video, 0, 0, containerWidth, containerHeight);
+        const imageData = context.getImageData(0, 0, containerWidth, containerHeight);
+
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code) {
+          qrResult.textContent = 'QR Code detected: ' + code.data;
+        }
+      }, 100);
+    }
+    scanQRCode();
+  </script>
+</body>
+</html>
